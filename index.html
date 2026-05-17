@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pakar Diagnosis Anak</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .identitas-box { background: #e9ecef; padding: 20px; border-radius: 5px; margin-bottom: 25px; border-left: 5px solid #0056b3; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        button:hover { background: #218838; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        #hasil-panel { margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; display: none; }
+        .notifikasi { padding: 15px; border-radius: 4px; margin-bottom: 20px; display: none; }
+        .sukses { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .gagal { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sistem Pakar Pertolongan Pertama Pada Anak</h2>
+    
+    <div id="notifikasi" class="notifikasi"></div>
+
+    <form id="formDiagnosis">
+        <div class="identitas-box">
+            <div class="form-group">
+                <label>Nama Pasien:</label>
+                <input type="text" id="inputNama" required placeholder="Masukkan nama pasien...">
+            </div>
+            <div class="form-group">
+                <label>Kelompok / Ruangan:</label>
+                <input type="text" id="inputKelompok" required placeholder="Contoh: Kelompok 1 / TRPL">
+            </div>
+        </div>
+
+        <h3>Pilih Tingkat Keyakinan Gejala:</h3>
+        <div id="gejala-container">
+            <!-- Elemen gejala akan dimuat otomatis oleh JavaScript -->
+        </div>
+
+        <button type="submit" id="btnProses">Proses Analisis & Simpan Data</button>
+    </form>
+
+    <div id="hasil-panel">
+        <h3>Laporan Hasil Diagnosis</h3>
+        <ul id="daftar-hasil" style="font-size: 1.1em; line-height: 1.8;"></ul>
+        <div style="background: #fff3cd; padding: 15px; border-left: 5px solid #ffc107; margin-top: 20px;">
+            <p id="kesimpulan-teks" style="margin: 0; font-style: italic;"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+    const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbx1X72RZH1GJsMTx7luhmb2PR_pDLo6U2WK1x5Euj1nhmRN6czSww0KjXPWTWSr5QeM7Q/exec";
+
+    // Data Daftar Gejala
+    const daftarGejala = [
+        { id: "G1", nama: "Demam tinggi" },
+        { id: "G2", nama: "Bintik merah pada kulit" },
+        { id: "G3", nama: "Gatal pada kulit" },
+        { id: "G4", nama: "Batuk" },
+        { id: "G5", nama: "Pilek" },
+        { id: "G6", nama: "Mata merah" },
+        { id: "G7", nama: "Nyeri otot/sendi" },
+        { id: "G8", nama: "Mual atau muntah" },
+        { id: "G9", nama: "Mimisan" },
+        { id: "G10", nama: "Tubuh lemas" }
+    ];
+
+    // Basis Pengetahuan Pakar (Certainty Factor Pakar)
+    const basisPengetahuan = {
+        "Campak": { "G1": 0.8, "G2": 0.9, "G4": 0.5, "G5": 0.6, "G6": 0.7, "G10": 0.5 },
+        "Cacar Air": { "G1": 0.7, "G2": 0.8, "G3": 0.9, "G10": 0.4 },
+        "Demam Berdarah Dengue": { "G1": 0.9, "G2": 0.6, "G7": 0.8, "G8": 0.7, "G9": 0.9, "G10": 0.8 }
+    };
+
+    // Fungsi untuk merender tampilan opsi dropdown gejala
+    function renderGejala() {
+        const container = document.getElementById("gejala-container");
+        let html = "";
+        daftarGejala.forEach(gejala => {
+            html += `
+            <div class="form-group">
+                <label>${gejala.id} - ${gejala.nama}</label>
+                <select id="${gejala.id}" class="cf-input">
+                    <option value="0">Tidak (0.0)</option>
+                    <option value="0.4">Mungkin (0.4)</option>
+                    <option value="0.6">Kemungkinan Besar (0.6)</option>
+                    <option value="0.8">Yakin (0.8)</option>
+                    <option value="1.0">Sangat Yakin (1.0)</option>
+                </select>
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    renderGejala();
+
+    // Fungsi Utama Eksekusi Diagnosis
+    document.getElementById("formDiagnosis").addEventListener("submit", function(e) {
+        e.preventDefault(); // Mencegah halaman termuat ulang
+
+        const btn = document.getElementById("btnProses");
+        btn.innerText = "Sedang mengalkulasi dan menyimpan...";
+        btn.disabled = true;
+
+        const nama = document.getElementById("inputNama").value.trim();
+        const kelompok = document.getElementById("inputKelompok").value.trim();
+        
+        // Ambil nilai input CF dari pengguna
+        let inputUser = {};
+        let adaGejala = false;
+        document.querySelectorAll(".cf-input").forEach(select => {
+            let nilai = parseFloat(select.value);
+            if (nilai > 0) {
+                inputUser[select.id] = nilai;
+                adaGejala = true;
+            }
+        });
+
+        if (!adaGejala) {
+            tampilkanNotifikasi("Anda harus memilih minimal satu tingkat keyakinan gejala.", false);
+            resetTombol(btn);
+            return;
+        }
+
+        // --- ALGORITMA CERTAINTY FACTOR ---
+        let hasilDiagnosis = [];
+
+        for (const penyakit in basisPengetahuan) {
+            let cfKombinasi = 0;
+            let aturan = basisPengetahuan[penyakit];
+
+            for (const idGejala in aturan) {
+                if (inputUser[idGejala] !== undefined) {
+                    let cfPakar = aturan[idGejala];
+                    let cfUser = inputUser[idGejala];
+                    let cfGejala = cfPakar * cfUser;
+
+                    if (cfKombinasi === 0) {
+                        cfKombinasi = cfGejala;
+                    } else {
+                        cfKombinasi = cfKombinasi + (cfGejala * (1 - cfKombinasi));
+                    }
+                }
+            }
+
+            if (cfKombinasi > 0) {
+                hasilDiagnosis.push({
+                    penyakit: penyakit,
+                    persentase: cfKombinasi * 100
+                });
+            }
+        }
+
+        // Urutkan dari nilai tertinggi
+        hasilDiagnosis.sort((a, b) => b.persentase - a.persentase);
+
+        if (hasilDiagnosis.length === 0) {
+            tampilkanNotifikasi("Sistem tidak dapat menemukan kecocokan penyakit.", false);
+            resetTombol(btn);
+            return;
+        }
+
+        // Tampilkan Hasil ke Antarmuka
+        tampilkanHasilAntarmuka(hasilDiagnosis);
+
+        // --- PROSES PENGIRIMAN API KE GOOGLE SHEETS ---
+        const penyakitTertinggi = hasilDiagnosis[0].penyakit;
+        const persentaseTertinggi = hasilDiagnosis[0].persentase.toFixed(2);
+
+        const payload = {
+            nama: nama,
+            kelompok: kelompok,
+            penyakit: penyakitTertinggi,
+            persentase: persentaseTertinggi
+        };
+
+        fetch(URL_API_SHEETS, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === "sukses") {
+                tampilkanNotifikasi("Diagnosis berhasil dan data telah terekam di Google Sheets.", true);
+            } else {
+                tampilkanNotifikasi("Diagnosis berhasil, tapi gagal merekam ke basis data.", false);
+            }
+        })
+        .catch(error => {
+            tampilkanNotifikasi("Terjadi kesalahan koneksi saat menyimpan data.", false);
+        })
+        .finally(() => {
+            resetTombol(btn);
+        });
+    });
+
+    function tampilkanHasilAntarmuka(hasil) {
+        document.getElementById("hasil-panel").style.display = "block";
+        const daftarHasil = document.getElementById("daftar-hasil");
+        daftarHasil.innerHTML = "";
+
+        hasil.forEach(item => {
+            daftarHasil.innerHTML += `<li><strong>${item.penyakit}</strong>: ${item.persentase.toFixed(2)}%</li>`;
+        });
+
+        const kesimpulan = document.getElementById("kesimpulan-teks");
+        kesimpulan.innerHTML = `Sistem menyimpulkan diagnosis tertinggi adalah: <br><strong style="font-size: 1.4em; color: #d9534f;">${hasil[0].penyakit}</strong> (${hasil[0].persentase.toFixed(2)}%).`;
+    }
+
+    function tampilkanNotifikasi(pesan, isSukses) {
+        const notifBox = document.getElementById("notifikasi");
+        notifBox.style.display = "block";
+        notifBox.innerText = pesan;
+        notifBox.className = "notifikasi " + (isSukses ? "sukses" : "gagal");
+        window.scrollTo(0, 0);
+    }
+
+    function resetTombol(btn) {
+        btn.innerText = "Proses Analisis & Simpan Data";
+        btn.disabled = false;
+    }
+</script>
+
+</body>
+</html>
