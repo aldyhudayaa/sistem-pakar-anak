@@ -186,24 +186,36 @@
 
         fetch(URL_API_SHEETS, {
             method: "POST",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8",
+            },
+            redirect: "follow",
             body: JSON.stringify(payload)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Respon jaringan tidak OK");
+            }
+            return response.json();
+        })
         .then(result => {
             if (result.status === "sukses") {
                 tampilkanNotifikasi("Diagnosis berhasil dan data telah terekam di Google Sheets.", true);
             } else {
-                tampilkanNotifikasi("Diagnosis berhasil, tapi gagal merekam ke basis data.", false);
+                tampilkanNotifikasi("Gagal merekam ke basis data: " + result.pesan, false);
             }
         })
         .catch(error => {
-            tampilkanNotifikasi("Terjadi kesalahan koneksi saat menyimpan data.", false);
+            console.error("Detail Galat:", error);
+            tampilkanNotifikasi("Terjadi kesalahan koneksi: Periksa console browser (F12).", false);
         })
         .finally(() => {
             resetTombol(btn);
         });
-    });
 
+    }); // <--- INI ADALAH PENUTUP YANG HILANG SEBELUMNYA
+
+    // Kumpulan Fungsi Bantuan (Helper Functions)
     function tampilkanHasilAntarmuka(hasil) {
         document.getElementById("hasil-panel").style.display = "block";
         const daftarHasil = document.getElementById("daftar-hasil");
