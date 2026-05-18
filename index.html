@@ -4,94 +4,313 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Pakar Diagnosis Anak</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .form-group { margin-bottom: 15px; }
-        .identitas-box { background: #e9ecef; padding: 20px; border-radius: 5px; margin-bottom: 25px; border-left: 5px solid #0056b3; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
-        button:hover { background: #218838; }
-        button:disabled { background: #6c757d; cursor: not-allowed; }
-        #hasil-panel { margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; display: none; }
-        .notifikasi { padding: 15px; border-radius: 4px; margin-bottom: 20px; display: none; }
-        .sukses { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .gagal { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        /* CSS Variables untuk konsistensi tema */
+        :root {
+            --biru-utama: #2563eb;
+            --biru-muda: #eff6ff;
+            --biru-gradasi: linear-gradient(135deg, #1e40af, #3b82f6);
+            --hijau-sukses: #10b981;
+            --hijau-gradasi: linear-gradient(135deg, #059669, #10b981);
+            --merah-bahaya: #ef4444;
+            --teks-utama: #1e293b;
+            --teks-sekunder: #64748b;
+            --abu-latar: #f8fafc;
+            --abu-garis: #e2e8f0;
+            --putih: #ffffff;
+            --bayangan-halus: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --bayangan-timbul: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Pengaturan Dasar */
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            margin: 0; 
+            padding: 40px 15px; 
+            background-color: var(--abu-latar); 
+            color: var(--teks-utama); 
+            line-height: 1.6;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .wadah-utama { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: var(--putih); 
+            border-radius: 24px; 
+            box-shadow: var(--bayangan-timbul);
+            overflow: hidden;
+            animation: masukAtas 0.6s ease-out forwards;
+        }
+
+        /* Bagian Kepala (Header) */
+        .kepala-aplikasi {
+            background: var(--biru-gradasi);
+            padding: 40px 30px;
+            text-align: center;
+            color: var(--putih);
+            position: relative;
+        }
+
+        .kepala-aplikasi h2 {
+            margin: 0;
+            font-weight: 900;
+            font-size: 2.2em;
+            letter-spacing: -0.5px;
+        }
+
+        .kepala-aplikasi p {
+            margin: 10px 0 0 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* Konten Formulir */
+        .konten-tubuh { padding: 40px 30px; }
+
+        .label-kategori {
+            display: flex;
+            align-items: center;
+            font-size: 1.2em;
+            font-weight: 800;
+            color: var(--teks-utama);
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .label-kategori::before {
+            content: ''; display: block; width: 6px; height: 24px;
+            background: var(--biru-utama); border-radius: 4px;
+        }
+
+        /* Kotak Identitas */
+        .kotak-identitas {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: var(--biru-muda);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid #bfdbfe;
+            margin-bottom: 40px;
+        }
+
+        .grup-isian label {
+            display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.95em;
+        }
+
+        input[type="text"] {
+            width: 100%; padding: 14px 16px; border: 2px solid var(--putih);
+            border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 1em;
+            background: var(--putih); box-sizing: border-box; transition: all 0.3s;
+            box-shadow: var(--bayangan-halus);
+        }
+
+        input[type="text"]:focus {
+            outline: none; border-color: var(--biru-utama); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+        }
+
+        /* Daftar Gejala */
+        .daftar-gejala {
+            display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px;
+        }
+
+        .item-gejala {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--putih); border: 1px solid var(--abu-garis);
+            padding: 16px 20px; border-radius: 12px; transition: all 0.2s;
+        }
+
+        .item-gejala:hover {
+            border-color: #93c5fd; box-shadow: var(--bayangan-halus); transform: translateX(4px);
+        }
+
+        .nama-gejala { font-weight: 600; font-size: 1.05em; display: flex; align-items: center; gap: 10px; }
+        .nama-gejala span { color: var(--teks-sekunder); font-size: 0.85em; font-weight: 800; background: var(--abu-latar); padding: 4px 8px; border-radius: 6px; }
+
+        /* Kustomisasi Dropdown (Select) */
+        select.pilihan-cf {
+            appearance: none; -webkit-appearance: none;
+            width: 240px; padding: 12px 16px; border: 2px solid var(--abu-garis);
+            border-radius: 10px; font-family: 'Nunito', sans-serif; font-weight: 600; font-size: 0.95em;
+            background-color: var(--abu-latar); color: var(--teks-utama); cursor: pointer; transition: all 0.3s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;
+        }
+
+        select.pilihan-cf:focus { outline: none; border-color: var(--biru-utama); background-color: var(--putih); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        select.pilihan-cf.terisi { background-color: #f0fdf4; border-color: #86efac; color: #166534; }
+
+        /* Tombol Proses */
+        .tombol-utama {
+            width: 100%; padding: 18px; background: var(--hijau-gradasi); color: var(--putih);
+            border: none; border-radius: 14px; font-size: 1.2em; font-weight: 800;
+            cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+
+        .tombol-utama:hover { transform: translateY(-3px); box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.4); }
+        .tombol-utama:active { transform: translateY(0); }
+        .tombol-utama:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        /* Panel Hasil */
+        #panel-hasil { display: none; margin-top: 20px; animation: masukAtas 0.6s ease-out forwards; }
+        
+        .kartu-hasil { background: var(--putih); border: 2px solid var(--abu-garis); border-radius: 16px; padding: 30px; margin-bottom: 20px; }
+        .penyakit-tertinggi { text-align: center; margin-bottom: 30px; }
+        .teks-diagnosis { font-size: 1.1em; color: var(--teks-sekunder); font-weight: 700; margin-bottom: 5px;}
+        .nama-penyakit-hasil { font-size: 2.5em; font-weight: 900; color: var(--merah-bahaya); margin: 0; line-height: 1.2; letter-spacing: -1px; }
+
+        /* Bar Persentase */
+        .item-persentase { margin-bottom: 15px; }
+        .info-bar { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 8px; }
+        .trek-bar { width: 100%; height: 12px; background: var(--abu-garis); border-radius: 10px; overflow: hidden; }
+        .isi-bar { height: 100%; border-radius: 10px; width: 0; transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Kotak Solusi */
+        .kotak-solusi {
+            background: #fffbeb; border: 2px solid #fde68a; padding: 25px;
+            border-radius: 16px; margin-top: 20px; position: relative;
+        }
+        .kotak-solusi h4 { margin: 0 0 10px 0; color: #b45309; font-size: 1.2em; font-weight: 800; display: flex; align-items: center; gap: 8px;}
+        .kotak-solusi p { margin: 0; color: #78350f; font-size: 1.05em; }
+
+        /* Log Terminal Animasi */
+        .tombol-log {
+            width: 100%; background: transparent; color: var(--teks-sekunder); border: 2px dashed var(--abu-garis);
+            padding: 15px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 30px; transition: all 0.2s;
+        }
+        .tombol-log:hover { background: var(--abu-latar); color: var(--teks-utama); border-color: #cbd5e1; }
+        
+        .konsol-log {
+            background: #0f172a; color: #38bdf8; padding: 25px; border-radius: 12px; margin-top: 15px;
+            font-family: 'Courier New', Courier, monospace; font-size: 0.9em; display: none; line-height: 1.7;
+            border-left: 4px solid #38bdf8; overflow-x: auto;
+        }
+        .konsol-log .kuning { color: #fde047; }
+        .konsol-log .hijau { color: #4ade80; }
+        .konsol-log .merah { color: #f87171; font-weight: bold; }
+        .konsol-log .putih { color: #f8fafc; }
+
+        /* Notifikasi */
+        .notifikasi { position: fixed; top: 20px; right: 20px; padding: 16px 24px; border-radius: 12px; font-weight: 700; display: none; z-index: 1000; box-shadow: var(--bayangan-timbul); animation: geserKiri 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .sukses { background: var(--hijau-sukses); color: white; }
+        .gagal { background: var(--merah-bahaya); color: white; }
+
+        /* Animasi */
+        @keyframes masukAtas { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes geserKiri { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Responsif Mobile */
+        @media (max-width: 650px) {
+            .kotak-identitas { grid-template-columns: 1fr; }
+            .item-gejala { flex-direction: column; align-items: flex-start; gap: 10px; }
+            select.pilihan-cf { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Sistem Pakar Pertolongan Pertama Pada Anak</h2>
-    
-    <div id="notifikasi" class="notifikasi"></div>
+<div id="notifikasi" class="notifikasi"></div>
 
-    <form id="formDiagnosis">
-        <div class="identitas-box">
-            <div class="form-group">
-                <label>Nama Pasien:</label>
-                <input type="text" id="inputNama" required placeholder="Masukkan nama pasien...">
+<div class="wadah-utama">
+    <div class="kepala-aplikasi">
+        <h2>Sistem Pakar Medis Anak</h2>
+        <p>Analisis Gejala Klinis dengan Metode Certainty Factor</p>
+    </div>
+
+    <div class="konten-tubuh">
+        <form id="formDiagnosis">
+            
+            <div class="label-kategori">Informasi Pasien</div>
+            <div class="kotak-identitas">
+                <div class="grup-isian">
+                    <label>Nama Pasien</label>
+                    <input type="text" id="inputNama" required placeholder="Masukkan nama lengkap...">
+                </div>
+                <div class="grup-isian">
+                    <label>Ruang / Kelompok</label>
+                    <input type="text" id="inputKelompok" required placeholder="Contoh: Kelompok 3 / TRPL">
+                </div>
             </div>
-            <div class="form-group">
-                <label>Kelompok / Ruangan:</label>
-                <input type="text" id="inputKelompok" required placeholder="Contoh: Kelompok 1 / TRPL">
+
+            <div class="label-kategori">Formulir Observasi Gejala</div>
+            <p style="color: var(--teks-sekunder); margin-top: -10px; margin-bottom: 25px;">Pilih tingkat keyakinan yang paling sesuai dengan kondisi pasien saat ini.</p>
+            
+            <div id="wadah-gejala" class="daftar-gejala">
+                </div>
+
+            <button type="submit" id="btnProses" class="tombol-utama">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                Proses Kalkulasi Diagnosis
+            </button>
+        </form>
+
+        <div id="panel-hasil">
+            <div class="label-kategori">Laporan Hasil Diagnosis Akhir</div>
+            
+            <div class="kartu-hasil">
+                <div class="penyakit-tertinggi">
+                    <div class="teks-diagnosis">Sistem menyimpulkan diagnosis penyakit:</div>
+                    <h3 class="nama-penyakit-hasil" id="penyakit-utama"></h3>
+                </div>
+                
+                <div id="daftar-bar-hasil">
+                    </div>
             </div>
-        </div>
 
-        <h3>Pilih Tingkat Keyakinan Gejala:</h3>
-        <div id="gejala-container">
-            <!-- Elemen gejala akan dimuat otomatis oleh JavaScript -->
-        </div>
+            <div id="wadah-solusi" class="kotak-solusi">
+                </div>
 
-        <button type="submit" id="btnProses">Proses Analisis & Simpan Data</button>
-    </form>
-
-    <div id="hasil-panel">
-        <h3>Laporan Hasil Diagnosis</h3>
-        <ul id="daftar-hasil" style="font-size: 1.1em; line-height: 1.8;"></ul>
-        <div style="background: #fff3cd; padding: 15px; border-left: 5px solid #ffc107; margin-top: 20px;">
-            <p id="kesimpulan-teks" style="margin: 0; font-style: italic;"></p>
+            <button type="button" class="tombol-log" onclick="bukaTutupLog()">
+                Tampilkan Hasil Rumus CF
+            </button>
+            <div id="konsol-log" class="konsol-log"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+    // URL Google Apps Script API
     const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbx1X72RZH1GJsMTx7luhmb2PR_pDLo6U2WK1x5Euj1nhmRN6czSww0KjXPWTWSr5QeM7Q/exec";
 
-    // Data Daftar Gejala
     const daftarGejala = [
-        { id: "G1", nama: "Demam tinggi" },
-        { id: "G2", nama: "Bintik merah pada kulit" },
-        { id: "G3", nama: "Gatal pada kulit" },
+        { id: "G1", nama: "Demam tinggi mendadak" },
+        { id: "G2", nama: "Muncul bintik/ruam merah pada kulit" },
+        { id: "G3", nama: "Terasa gatal pada kulit" },
         { id: "G4", nama: "Batuk" },
-        { id: "G5", nama: "Pilek" },
-        { id: "G6", nama: "Mata merah" },
-        { id: "G7", nama: "Nyeri otot/sendi" },
+        { id: "G5", nama: "Pilek / Hidung tersumbat" },
+        { id: "G6", nama: "Mata berair dan merah" },
+        { id: "G7", nama: "Nyeri pada otot atau sendi" },
         { id: "G8", nama: "Mual atau muntah" },
-        { id: "G9", nama: "Mimisan" },
-        { id: "G10", nama: "Tubuh lemas" }
+        { id: "G9", nama: "Mimisan (keluar darah dari hidung)" },
+        { id: "G10", nama: "Tubuh terlihat sangat lemas" }
     ];
 
-    // Basis Pengetahuan Pakar (Certainty Factor Pakar)
     const basisPengetahuan = {
         "Campak": { "G1": 0.8, "G2": 0.9, "G4": 0.5, "G5": 0.6, "G6": 0.7, "G10": 0.5 },
         "Cacar Air": { "G1": 0.7, "G2": 0.8, "G3": 0.9, "G10": 0.4 },
         "Demam Berdarah Dengue": { "G1": 0.9, "G2": 0.6, "G7": 0.8, "G8": 0.7, "G9": 0.9, "G10": 0.8 }
     };
 
-    // Fungsi untuk merender tampilan opsi dropdown gejala
+    const dataSolusi = {
+        "Campak": "Berikan istirahat yang cukup pada anak, penuhi kebutuhan cairan tubuh dengan minum air yang banyak, konsumsi makanan bergizi penambah imun, dan berikan obat penurun demam (parasetamol) sesuai dosis anjuran dokter jika demam tinggi.",
+        "Cacar Air": "Hindari memecahkan atau menggaruk bintik melenting agar tidak menyebabkan infeksi sekunder atau bekas luka dalam, pakaikan baju yang longgar, tipis, dan lembut, serta gunakan losion kalamin/bedak salicyl untuk meredakan gatal pada kulit anak.",
+        "Demam Berdarah Dengue": "Segera lakukan cek darah laboratorium berkala (pantau kadar trombosit dan hematokrit), kompres hangat secara teratur, berikan asupan cairan dalam jumlah banyak (air putih, jus, oralit) untuk mencegah syok dehidrasi, dan <strong>jangan berikan obat golongan ibuprofen/aspirin</strong> karena dapat memicu perdarahan lambung."
+    };
+
+    // Render Form
     function renderGejala() {
-        const container = document.getElementById("gejala-container");
+        const wadah = document.getElementById("wadah-gejala");
         let html = "";
         daftarGejala.forEach(gejala => {
             html += `
-            <div class="form-group">
-                <label>${gejala.id} - ${gejala.nama}</label>
-                <select id="${gejala.id}" class="cf-input">
-                    <option value="0">Tidak (0.0)</option>
+            <div class="item-gejala">
+                <div class="nama-gejala"><span>${gejala.id}</span> ${gejala.nama}</div>
+                <select id="${gejala.id}" class="pilihan-cf" onchange="warnaiInput(this)">
+                    <option value="0">Tidak Mengalami (0.0)</option>
                     <option value="0.4">Mungkin (0.4)</option>
                     <option value="0.6">Kemungkinan Besar (0.6)</option>
                     <option value="0.8">Yakin (0.8)</option>
@@ -99,26 +318,35 @@
                 </select>
             </div>`;
         });
-        container.innerHTML = html;
+        wadah.innerHTML = html;
     }
-
     renderGejala();
 
-    // Fungsi Utama Eksekusi Diagnosis
-    document.getElementById("formDiagnosis").addEventListener("submit", function(e) {
-        e.preventDefault(); // Mencegah halaman termuat ulang
+    // Mikro-interaksi: Merubah warna select jika sudah dipilih
+    function warnaiInput(elemen) {
+        if (elemen.value !== "0") { elemen.classList.add("terisi"); } 
+        else { elemen.classList.remove("terisi"); }
+    }
 
+    // Tampilkan Log Terminal
+    function bukaTutupLog() {
+        const log = document.getElementById("konsol-log");
+        log.style.display = (log.style.display === "none" || log.style.display === "") ? "block" : "none";
+    }
+
+    // Proses Utama
+    document.getElementById("formDiagnosis").addEventListener("submit", function(e) {
+        e.preventDefault();
         const btn = document.getElementById("btnProses");
-        btn.innerText = "Sedang mengalkulasi dan menyimpan...";
+        btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="putar"><path d="M21 12a9 9 0 11-6.219-8.56"></path></svg> Mengalkulasi...`;
         btn.disabled = true;
 
         const nama = document.getElementById("inputNama").value.trim();
         const kelompok = document.getElementById("inputKelompok").value.trim();
         
-        // Ambil nilai input CF dari pengguna
         let inputUser = {};
         let adaGejala = false;
-        document.querySelectorAll(".cf-input").forEach(select => {
+        document.querySelectorAll(".pilihan-cf").forEach(select => {
             let nilai = parseFloat(select.value);
             if (nilai > 0) {
                 inputUser[select.id] = nilai;
@@ -127,121 +355,149 @@
         });
 
         if (!adaGejala) {
-            tampilkanNotifikasi("Anda harus memilih minimal satu tingkat keyakinan gejala.", false);
+            tampilkanNotif("Mohon pilih minimal satu gejala klinis.", false);
             resetTombol(btn);
             return;
         }
 
-        // --- ALGORITMA CERTAINTY FACTOR ---
         let hasilDiagnosis = [];
+        let logTeks = `<div class="putih">&gt; Memulai mesin inferensi Certainty Factor...</div>
+                       <div class="putih">&gt; Mengambil data bobot pakar... [OK]</div><br>`;
 
         for (const penyakit in basisPengetahuan) {
             let cfKombinasi = 0;
             let aturan = basisPengetahuan[penyakit];
+            let teksLangkah = `<div class="kuning">=== Evaluasi Penyakit: ${penyakit.toUpperCase()} ===</div>`;
+            let iterasi = 1;
+            let ditemukan = false;
 
             for (const idGejala in aturan) {
                 if (inputUser[idGejala] !== undefined) {
+                    ditemukan = true;
                     let cfPakar = aturan[idGejala];
                     let cfUser = inputUser[idGejala];
                     let cfGejala = cfPakar * cfUser;
 
+                    teksLangkah += `<div>[Iterasi ${iterasi}] Gejala ${idGejala}: CF_Pakar(${cfPakar}) * CF_User(${cfUser}) = <span class="putih">${cfGejala.toFixed(2)}</span></div>`;
+
                     if (cfKombinasi === 0) {
                         cfKombinasi = cfGejala;
+                        teksLangkah += `<div class="hijau">↳ Inisialisasi CF_Kombinasi = ${cfKombinasi.toFixed(4)}</div>`;
                     } else {
+                        let cfLama = cfKombinasi;
                         cfKombinasi = cfKombinasi + (cfGejala * (1 - cfKombinasi));
+                        teksLangkah += `<div class="hijau">↳ Perhitungan CF_Kombinasi = ${cfLama.toFixed(4)} + (${cfGejala.toFixed(2)} * (1 - ${cfLama.toFixed(4)})) = ${cfKombinasi.toFixed(4)}</div>`;
                     }
+                    iterasi++;
                 }
             }
 
-            if (cfKombinasi > 0) {
-                hasilDiagnosis.push({
-                    penyakit: penyakit,
-                    persentase: cfKombinasi * 100
-                });
+            if (ditemukan && cfKombinasi > 0) {
+                teksLangkah += `<div class="merah">&gt;&gt; Nilai Kepastian Akhir [${penyakit}]: ${(cfKombinasi * 100).toFixed(2)}%</div><br>`;
+                logTeks += teksLangkah;
+                hasilDiagnosis.push({ penyakit: penyakit, persentase: cfKombinasi * 100 });
+            } else if (!ditemukan) {
+                logTeks += teksLangkah + `<div class="teks-sekunder">Tidak ada aturan yang terpenuhi. Lewati.</div><br>`;
             }
         }
 
-        // Urutkan dari nilai tertinggi
+        document.getElementById("konsol-log").innerHTML = logTeks;
+        document.getElementById("konsol-log").style.display = "none";
+
         hasilDiagnosis.sort((a, b) => b.persentase - a.persentase);
 
         if (hasilDiagnosis.length === 0) {
-            tampilkanNotifikasi("Sistem tidak dapat menemukan kecocokan penyakit.", false);
+            tampilkanNotif("Kombinasi gejala tidak menghasilkan diagnosis valid.", false);
             resetTombol(btn);
             return;
         }
 
-        // Tampilkan Hasil ke Antarmuka
-        tampilkanHasilAntarmuka(hasilDiagnosis);
+        // Delay buatan untuk UX agar terasa sistem sedang "berpikir" keras
+        setTimeout(() => {
+            tampilkanAntarmukaHasil(hasilDiagnosis);
+            kirimKeDatabase(nama, kelompok, hasilDiagnosis[0], btn);
+        }, 800);
+    });
 
-        // --- PROSES PENGIRIMAN API KE GOOGLE SHEETS ---
-        const penyakitTertinggi = hasilDiagnosis[0].penyakit;
-        const persentaseTertinggi = hasilDiagnosis[0].persentase.toFixed(2);
+    function tampilkanAntarmukaHasil(hasil) {
+        document.getElementById("panel-hasil").style.display = "block";
+        const penyakitUtama = hasil[0].penyakit;
+        document.getElementById("penyakit-utama").innerText = penyakitUtama;
 
+        const wadahBar = document.getElementById("daftar-bar-hasil");
+        wadahBar.innerHTML = "";
+
+        // Render Bar dengan Animasi Tunda
+        hasil.forEach((item, index) => {
+            let warnaBar = index === 0 ? "var(--merah-bahaya)" : "var(--biru-utama)";
+            let opasitas = index === 0 ? "1" : "0.7";
+            
+            wadahBar.innerHTML += `
+            <div class="item-persentase">
+                <div class="info-bar" style="opacity: ${opasitas};">
+                    <span>${item.penyakit}</span>
+                    <span>${item.persentase.toFixed(2)}%</span>
+                </div>
+                <div class="trek-bar">
+                    <div class="isi-bar" id="bar-${index}" style="background: ${warnaBar};"></div>
+                </div>
+            </div>`;
+            
+            // Animasi fill bar
+            setTimeout(() => { document.getElementById(`bar-${index}`).style.width = `${item.persentase}%`; }, 100);
+        });
+
+        document.getElementById("wadah-solusi").innerHTML = `
+            <h4>💡 Panduan Pertolongan Pertama</h4>
+            <p>${dataSolusi[penyakitUtama]}</p>
+        `;
+
+        // Auto Scroll Halus
+        document.getElementById("panel-hasil").scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function kirimKeDatabase(nama, kelompok, diagnosisTertinggi, btn) {
         const payload = {
-            nama: nama,
-            kelompok: kelompok,
-            penyakit: penyakitTertinggi,
-            persentase: persentaseTertinggi
+            nama: nama, kelompok: kelompok,
+            penyakit: diagnosisTertinggi.penyakit, persentase: diagnosisTertinggi.persentase.toFixed(2)
         };
 
         fetch(URL_API_SHEETS, {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8",
-            },
-            redirect: "follow",
-            body: JSON.stringify(payload)
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            redirect: "follow", body: JSON.stringify(payload)
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Respon jaringan tidak OK");
-            }
-            return response.json();
-        })
+        .then(response => { if (!response.ok) throw new Error("Gagal Koneksi"); return response.json(); })
         .then(result => {
-            if (result.status === "sukses") {
-                tampilkanNotifikasi("Diagnosis berhasil dan data telah terekam di Google Sheets.", true);
-            } else {
-                tampilkanNotifikasi("Gagal merekam ke basis data: " + result.pesan, false);
-            }
+            if (result.status === "sukses") { tampilkanNotif("Diagnosis berhasil dianalisis & riwayat terekam ke Peladen.", true); }
+            else { tampilkanNotif("Sistem berjalan, namun gagal terhubung ke basis data.", false); }
         })
-        .catch(error => {
-            console.error("Detail Galat:", error);
-            tampilkanNotifikasi("Terjadi kesalahan koneksi: Periksa console browser (F12).", false);
-        })
-        .finally(() => {
-            resetTombol(btn);
-        });
-
-    }); // <--- INI ADALAH PENUTUP YANG HILANG SEBELUMNYA
-
-    // Kumpulan Fungsi Bantuan (Helper Functions)
-    function tampilkanHasilAntarmuka(hasil) {
-        document.getElementById("hasil-panel").style.display = "block";
-        const daftarHasil = document.getElementById("daftar-hasil");
-        daftarHasil.innerHTML = "";
-
-        hasil.forEach(item => {
-            daftarHasil.innerHTML += `<li><strong>${item.penyakit}</strong>: ${item.persentase.toFixed(2)}%</li>`;
-        });
-
-        const kesimpulan = document.getElementById("kesimpulan-teks");
-        kesimpulan.innerHTML = `Sistem menyimpulkan diagnosis tertinggi adalah: <br><strong style="font-size: 1.4em; color: #d9534f;">${hasil[0].penyakit}</strong> (${hasil[0].persentase.toFixed(2)}%).`;
+        .catch(error => { tampilkanNotif("Peringatan: Berjalan dalam mode luring. Data tidak tersimpan.", false); })
+        .finally(() => { resetTombol(btn); });
     }
 
-    function tampilkanNotifikasi(pesan, isSukses) {
-        const notifBox = document.getElementById("notifikasi");
-        notifBox.style.display = "block";
-        notifBox.innerText = pesan;
-        notifBox.className = "notifikasi " + (isSukses ? "sukses" : "gagal");
-        window.scrollTo(0, 0);
+    function tampilkanNotif(pesan, isSukses) {
+        const notif = document.getElementById("notifikasi");
+        notif.style.display = "block";
+        notif.innerText = pesan;
+        notif.className = "notifikasi " + (isSukses ? "sukses" : "gagal");
+        
+        // Auto tutup notifikasi setelah 5 detik
+        setTimeout(() => {
+            notif.style.display = "none";
+        }, 5000);
     }
 
     function resetTombol(btn) {
-        btn.innerText = "Proses Analisis & Simpan Data";
+        btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Analisis Ulang Data`;
         btn.disabled = false;
     }
 </script>
+
+<style>
+    /* CSS tambahan untuk animasi putar ikon saat loading */
+    @keyframes muter { 100% { transform: rotate(360deg); } }
+    .putar { animation: muter 1s linear infinite; }
+</style>
 
 </body>
 </html>
